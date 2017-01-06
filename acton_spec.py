@@ -5,13 +5,13 @@ Created on May 28, 2014
 '''
 from ScopeFoundry import HardwareComponent
 try:
-    from equipment.acton_spec import ActonSpectrometer
+    from .acton_spec_interface import ActonSpectrometer
 except Exception as err:
     print "Cannot load required modules for ActonSpectrometer:", err
 
 
 
-class ActonSpectrometerHardwareComponent(HardwareComponent):
+class ActonSpectrometerHW(HardwareComponent):
     
     ACTON_SPEC_PORT = "COM13"
 
