@@ -3,11 +3,13 @@ Created on May 28, 2014
 
 @author: Edward Barnard
 '''
+from __future__ import absolute_import, print_function
+
 from ScopeFoundry import HardwareComponent
 try:
     from .acton_spec_interface import ActonSpectrometer
 except Exception as err:
-    print "Cannot load required modules for ActonSpectrometer:", err
+    print("Cannot load required modules for ActonSpectrometer:", err)
 
 
 
@@ -51,13 +53,13 @@ class ActonSpectrometerHW(HardwareComponent):
 
         # connect to gui
         try:
-            self.center_wl.connect_bidir_to_widget(self.gui.ui.acton_spec_center_wl_doubleSpinBox)
-            self.exit_mirror.connect_bidir_to_widget(self.gui.ui.acton_spec_exitmirror_comboBox)
+            self.center_wl.connect_bidir_to_widget(self.app.ui.acton_spec_center_wl_doubleSpinBox)
+            self.exit_mirror.connect_bidir_to_widget(self.app.ui.acton_spec_exitmirror_comboBox)
         except Exception as err:
-            print self.name, "Could not connect to gui:", err
+            self.log.warning("Could not connect to app ui: {}".format( err ))
 
     def connect(self):
-        if self.debug: print "connecting to acton_spectrometer"
+        if self.debug: self.log.info( "connecting to acton_spectrometer" )
 
         # Open connection to hardware
         self.acton_spectrometer = ActonSpectrometer(port=self.ACTON_SPEC_PORT, debug=True, dummy=False)
@@ -82,13 +84,13 @@ class ActonSpectrometerHW(HardwareComponent):
             self.grating.updated_value[str].connect(
                         self.gui.ui.acton_spec_grating_lineEdit.setText)
         except Exception as err:
-            print "could not connect to custom gui"
+            self.log.warning( "could not connect to custom gui" )
 
         self.read_from_hardware()
 
 
     def disconnect(self):
-        print "disconnect" + self.name
+        self.log.info( "disconnect " + self.name )
         #disconnect hardware
         self.acton_spectrometer.close()
         

@@ -1,5 +1,8 @@
 import serial
 import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ActonSpectrometer(object):
 
@@ -35,18 +38,18 @@ class ActonSpectrometer(object):
     def write_wl(self, wl, waittime=1.0):
         wl = float(wl)
         resp = self.write_command("%0.3f NM" % wl,waittime=waittime)
-        if self.debug: print "write_wl", wl, resp
+        if self.debug: logger.debug("write_wl wl:{} resp:{}".format( wl, resp))
         
     def write_wl_fast(self, wl, waittime=1.0):
         wl = float(wl)
         resp = self.write_command("%0.3f GOTO" % wl,waittime=waittime)
-        if self.debug: print "write_wl_fast", wl, resp
+        if self.debug: logger.debug("write_wl_fast wl:{} resp:{}".format( wl, resp))
         
 
     def write_wl_nonblock(self, wl):
         wl = float(wl)
         resp = self.write_command("%0.3f >NM" % wl)
-        pass
+        if self.debug: logger.debug("write_wl_nonblock wl:{} resp:{}".format( wl, resp))
         
     def read_grating_info(self):
         grating_string = self.write_command("?GRATINGS", waittime=1.0)
@@ -69,9 +72,9 @@ class ActonSpectrometer(object):
         self.gratings = []
         
         for grating in gratings:
-            if self.debug: print grating
+            if self.debug: logger.debug("grating: {}".format( grating ))
             grating = str(grating).strip("\x1a ").split()
-            if self.debug: print grating
+            if self.debug: logger.debug("grating stripped: {}".format( grating ))
             num = int(grating[0])
             name = " ".join(grating[1:])
             self.gratings.append( (num, name) )
@@ -100,8 +103,7 @@ class ActonSpectrometer(object):
         
     def write_grating(self, grating):
         assert 0 < grating < 10 
-        self.write_command("%i GRATING" % grating)
-        pass        
+        self.write_command("%i GRATING" % grating)        
         
     def read_exit_mirror(self):
         resp = self.write_command("EXIT-MIRROR ?MIRROR")
@@ -148,7 +150,7 @@ class ActonSpectrometer(object):
 #        return response[:-4].strip()
     
     def write_command(self, cmd, waittime=0.5):
-        if self.debug: print "cmd: ", cmd
+        if self.debug: logger.debug("write_command cmd: {}".format( cmd ))
         if self.dummy: return "0"
         self.ser.write(cmd +"\r")
         time.sleep(waittime)
@@ -161,7 +163,7 @@ class ActonSpectrometer(object):
             #if self.debug: print "readbyte", repr(char)
             if char == "": #handles a timeout here
                 missed_char_count += 1
-                if self.debug: print "no character returned, missed %i so far" % missed_char_count
+                if self.debug: logger.debug("no character returned, missed %i so far" % missed_char_count)
                 if missed_char_count > 3:
                     return 0
                 continue
@@ -170,7 +172,7 @@ class ActonSpectrometer(object):
         
         out += self.ser.read(2) #Should be "\r\n"
 
-        if self.debug: print "complete message", repr(out)
+        if self.debug: logger.debug( "complete message" +  repr(out))
         
         #assert out[-3:] == ";FF"
         #assert out[:7] == "@%03iACK" % self.address   
@@ -181,7 +183,6 @@ class ActonSpectrometer(object):
         self.ser.flushInput()
         self.ser.flushOutput()
 
-        
         return out
     
     def close(self):
