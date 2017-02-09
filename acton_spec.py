@@ -91,13 +91,14 @@ class ActonSpectrometerHW(HardwareComponent):
 
     def disconnect(self):
         self.log.info( "disconnect " + self.name )
-        #disconnect hardware
-        self.acton_spectrometer.close()
         
         #disconnect logged quantities from hardware
-        for lq in self.logged_quantities.values():
-            lq.hardware_read_func = None
-            lq.hardware_set_func = None
+        self.settings.disconnect_all_from_hardware()
         
-        # clean up hardware object
-        del self.acton_spectrometer
+        
+        if hasattr(self, 'acton_spectrometer'):
+            #disconnect hardware
+            self.acton_spectrometer.close()
+            
+            # clean up hardware object
+            del self.acton_spectrometer
