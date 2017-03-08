@@ -12,7 +12,7 @@ class ActonSpectrometer(object):
         self.dummy = dummy
         
         if not self.dummy:
-            self.ser = serial.Serial(port=port, baudrate = 2400, bytesize=8, parity='N',
+            self.ser = serial.Serial(port=port, baudrate = 9600, bytesize=8, parity='N',
                                     stopbits=1, xonxoff=0, rtscts=0, timeout=5.0)
          
             self.ser.flushInput()
@@ -67,17 +67,18 @@ class ActonSpectrometer(object):
         """
         # 0x1A is the arrow char, indicates selected grating
         
-        gratings = grating_string.splitlines()[0:-1]
+        #gratings = grating_string.splitlines()[0:-1] # for no echo
+        gratings = grating_string.splitlines()[1:-1] # needed for echo
+        print(gratings)
         
         self.gratings = []
         
         for grating in gratings:
             if self.debug: logger.debug("grating: {}".format( grating ))
-            grating = str(grating).strip("\x1a ").split()
-            if self.debug: logger.debug("grating stripped: {}".format( grating ))
-            num = int(grating[0])
-            name = " ".join(grating[1:])
-            self.gratings.append( (num, name) )
+            grating_num, name = grating.strip(b"\x1a").split(maxsplit=1)
+            #if self.debug: logger.debug("grating stripped: {}".format( grating ))
+            num = int(grating_num)
+            self.gratings.append( (num, name.decode('ASCII')) )
         
         self.gratings_dict = {num: name for num,name in self.gratings}
         
@@ -122,12 +123,12 @@ class ActonSpectrometer(object):
         return self.entrance_slit
         
     def write_entrance_slit(self, pos):
-        assert 10 <= pos <= 3000
-        "SIDE-ENT-SLIT %i MICRONS" % pos
-        pass
+        assert 5 <= pos <= 3000
+        self.write_command("SIDE-ENT-SLIT %i MICRONS" % pos)
         # should return new pos
 
     def home_entrance_slit(self):
+        # TODO
         "SIDE-ENT-SLIT SHOME"
 
         
@@ -138,8 +139,9 @@ class ActonSpectrometer(object):
         return self.exit_slit
         
     def write_exit_slit(self, pos):
-        assert 10 <= pos <= 3000
-        "SIDE-EXIT-SLIT %i MICRONS" % pos
+        assert 5 <= pos <= 3000
+        self.write_command("SIDE-EXIT-SLIT %i MICRONS" % pos)
+        
 
 #    def write_command(self, cmd):
 #        if self.debug: print "write_command:", cmd
@@ -152,22 +154,23 @@ class ActonSpectrometer(object):
     def write_command(self, cmd, waittime=0.5):
         if self.debug: logger.debug("write_command cmd: {}".format( cmd ))
         if self.dummy: return "0"
-        self.ser.write(cmd +"\r")
+        cmd_bytes = (cmd).encode('ASCII')
+        self.ser.write(cmd_bytes+b"\r")
         time.sleep(waittime)
         
         out = bytearray()
-        char = ""
+        char = b""
         missed_char_count = 0
-        while char != "k":
+        while char != b"k":
             char = self.ser.read()
-            #if self.debug: print "readbyte", repr(char)
-            if char == "": #handles a timeout here
+            #if self.debug: print("readbyte", repr(char))
+            if char == b"": #handles a timeout here
                 missed_char_count += 1
                 if self.debug: logger.debug("no character returned, missed %i so far" % missed_char_count)
                 if missed_char_count > 3:
                     return 0
                 continue
-            out.append(char)
+            out += char
 
         
         out += self.ser.read(2) #Should be "\r\n"
@@ -177,13 +180,20 @@ class ActonSpectrometer(object):
         #assert out[-3:] == ";FF"
         #assert out[:7] == "@%03iACK" % self.address   
         
-        assert out[-5:] == bytearray(" ok\r\n")
-        return out[:-5].strip()
+        assert out[-5:] == b" ok\r\n"
+        out = out[:-5].strip()
+    
+        # When echo is enabled, verify echoed command and strip
+        echo = out[0:len(cmd_bytes)]        
+        rest = out[len(cmd_bytes):]
+        print("echo, rest, cmd:", echo, rest, cmd_bytes)
+        assert echo == cmd_bytes
+        return rest
         
-        self.ser.flushInput()
-        self.ser.flushOutput()
+        #self.ser.flushInput()
+        #self.ser.flushOutput()
 
-        return out
+        #return out
     
     def close(self):
         self.ser.close()
