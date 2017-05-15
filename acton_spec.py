@@ -22,6 +22,7 @@ class ActonSpectrometerHW(HardwareComponent):
         
         # Create logged quantities
         self.settings.New('port', dtype=str, initial='COM5')
+        self.settings.New('echo', dtype=bool, initial=True) # if serial port echo is enabled
         
         self.settings.New(
                                 name="center_wl",
@@ -61,7 +62,10 @@ class ActonSpectrometerHW(HardwareComponent):
         if self.debug: self.log.info( "connecting to acton_spectrometer" )
 
         # Open connection to hardware
-        self.acton_spectrometer = ActonSpectrometer(port=self.settings['port'], debug=True, dummy=False)
+        self.acton_spectrometer = ActonSpectrometer(port=self.settings['port'], 
+                                                    echo=self.settings['echo'],
+                                                    debug=self.settings['debug_mode'], 
+                                                    dummy=False)
 
         self.settings.grating_id.change_choice_list(
             tuple([ ("{}: {}".format(num,name), num) for num, name in self.acton_spectrometer.gratings])
@@ -97,16 +101,6 @@ class ActonSpectrometerHW(HardwareComponent):
             write_func=self.acton_spectrometer.write_exit_slit,            
             )
         
-
-        # connect GUI
-        try:
-            self.center_wl.updated_value[float].connect(
-                        self.gui.ui.acton_spec_center_wl_doubleSpinBox.setValue)
-            self.grating.updated_value[str].connect(
-                        self.gui.ui.acton_spec_grating_lineEdit.setText)
-        except Exception as err:
-            self.log.warning( "could not connect to custom gui" )
-
         self.read_from_hardware()
 
 
