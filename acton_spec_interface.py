@@ -6,10 +6,11 @@ logger = logging.getLogger(__name__)
 
 class ActonSpectrometer(object):
 
-    def __init__(self, port, debug=False, dummy=False):
+    def __init__(self, port, debug=False, echo=True, dummy=False):
         
         self.debug = debug
         self.dummy = dummy
+        self.echo = echo
         
         if not self.dummy:
             self.ser = serial.Serial(port=port, baudrate = 9600, bytesize=8, parity='N',
@@ -67,18 +68,20 @@ class ActonSpectrometer(object):
         """
         # 0x1A is the arrow char, indicates selected grating
         
-        #gratings = grating_string.splitlines()[0:-1] # for no echo
-        gratings = grating_string.splitlines()[1:-1] # needed for echo
-        print(gratings)
+        if self.echo:
+            gratings = grating_string.splitlines()[1:-1] # needed for echo
+        else:
+            gratings = grating_string.splitlines()[0:-1] # for no echo
+        if self.debug: print(gratings)
         
         self.gratings = []
         
         for grating in gratings:
             if self.debug: logger.debug("grating: {}".format( grating ))
-            grating_num, name = grating.strip(b"\x1a").split(maxsplit=1)
+            grating_num, name = grating.strip("\x1a").split(maxsplit=1)
             #if self.debug: logger.debug("grating stripped: {}".format( grating ))
             num = int(grating_num)
-            self.gratings.append( (num, name.decode('ASCII')) )
+            self.gratings.append( (num, name) )
         
         self.gratings_dict = {num: name for num,name in self.gratings}
         
@@ -118,8 +121,12 @@ class ActonSpectrometer(object):
         
     def read_entrance_slit(self):
         resp = self.write_command("SIDE-ENT-SLIT ?MICRONS")
-        "480 um"
-        self.entrance_slit = int(resp.split()[0])
+        #"480 um" or "no motor"
+        print(repr(resp))
+        if resp == 'no motor':
+            self.entrance_slit = -1
+        else:
+            self.entrance_slit = int(resp.split()[0])
         return self.entrance_slit
         
     def write_entrance_slit(self, pos):
@@ -134,8 +141,11 @@ class ActonSpectrometer(object):
         
     def read_exit_slit(self):
         resp = self.write_command("SIDE-EXIT-SLIT ?MICRONS")
-        "960 um"
-        self.exit_slit = int(resp.split()[0])
+        #"960 um" or "no motor"
+        if resp == 'no motor':
+            self.exit_slit = -1
+        else:
+            self.exit_slit = int(resp.split()[0])
         return self.exit_slit
         
     def write_exit_slit(self, pos):
@@ -174,22 +184,27 @@ class ActonSpectrometer(object):
 
         
         out += self.ser.read(2) #Should be "\r\n"
-
-        if self.debug: logger.debug( "complete message" +  repr(out))
         
+        out = out.decode('ascii')
+
+        if self.debug:
+            logger.debug( "complete message" +  repr(out))
+            print("complete message" + repr(out))
         #assert out[-3:] == ";FF"
         #assert out[:7] == "@%03iACK" % self.address   
         
-        assert out[-5:] == b" ok\r\n"
+        assert out[-5:] == " ok\r\n"
         out = out[:-5].strip()
     
         # When echo is enabled, verify echoed command and strip
-        echo = out[0:len(cmd_bytes)]        
-        rest = out[len(cmd_bytes):]
-        print("echo, rest, cmd:", echo, rest, cmd_bytes)
-        assert echo == cmd_bytes
-        return rest
-        
+        if self.echo:
+            echo = out[0:len(cmd_bytes)]        
+            rest = out[len(cmd_bytes):]
+            print("echo, rest, cmd:", echo, rest, cmd_bytes)
+            assert echo == cmd_bytes
+            return rest
+        else:
+            return out
         #self.ser.flushInput()
         #self.ser.flushOutput()
 
