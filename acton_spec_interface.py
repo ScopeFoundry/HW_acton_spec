@@ -201,7 +201,11 @@ class ActonSpectrometer(object):
             echo = out[0:len(cmd_bytes)]        
             rest = out[len(cmd_bytes):]
             print("echo, rest, cmd:", echo, rest, cmd_bytes)
+<<<<<<< HEAD
             assert echo == cmd
+=======
+            assert echo == cmd_bytes
+>>>>>>> d23eddb51984f311015483594899062df7612379
             return rest
         else:
             return out
