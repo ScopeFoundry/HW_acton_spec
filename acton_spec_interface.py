@@ -121,12 +121,14 @@ class ActonSpectrometer(object):
         
     def read_entrance_slit(self):
         resp = self.write_command("SIDE-ENT-SLIT ?MICRONS")
+        if self.debug:
+            print(resp)
         #"480 um" or "no motor"
-        print(repr(resp))
-        if resp == 'no motor':
+        if resp == ' no motor' or resp == 'no motor':
             self.entrance_slit = -1
         else:
             self.entrance_slit = int(resp.split()[0])
+            
         return self.entrance_slit
         
     def write_entrance_slit(self, pos):
@@ -142,7 +144,7 @@ class ActonSpectrometer(object):
     def read_exit_slit(self):
         resp = self.write_command("SIDE-EXIT-SLIT ?MICRONS")
         #"960 um" or "no motor"
-        if resp == 'no motor':
+        if resp == ' no motor' or resp == 'no motor':
             self.exit_slit = -1
         else:
             self.exit_slit = int(resp.split()[0])
