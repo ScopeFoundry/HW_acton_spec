@@ -22,7 +22,7 @@ class ActonSpectrometerHW(HardwareComponent):
         
         # Create logged quantities
         self.settings.New('port', dtype=str, initial='COM5')
-        self.settings.New('echo', dtype=bool, initial=True) # if serial port echo is enabled
+        self.settings.New('echo', dtype=bool, initial=True) # if serial port echo is enabled, USB echo should be disabled
         
         self.settings.New(
                                 name="center_wl",
@@ -50,13 +50,6 @@ class ActonSpectrometerHW(HardwareComponent):
         self.settings.New('entrance_slit', dtype=int, unit='um', reread_from_hardware_after_write=True)
         self.settings.New('exit_slit', dtype=int, unit='um', reread_from_hardware_after_write=True)
         
-
-        # connect to gui
-        try:
-            self.settings.center_wl.connect_to_widget(self.app.ui.acton_spec_center_wl_doubleSpinBox)
-            self.settings.exit_mirror.connect_to_widget(self.app.ui.acton_spec_exitmirror_comboBox)
-        except Exception as err:
-            self.log.warning("Could not connect to app ui: {}".format( err ))
 
     def connect(self):
         if self.debug: self.log.info( "connecting to acton_spectrometer" )
