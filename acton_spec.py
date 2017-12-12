@@ -39,7 +39,7 @@ class ActonSpectrometerHW(HardwareComponent):
                                 reread_from_hardware_after_write = True
                                 )
 
-        self.settings.New('grating_id', dtype=int, choices=(1,2,3,4,5,6))
+        self.settings.New('grating_id', dtype=int, initial=1, choices=(1,2,3,4,5,6))
         self.settings.New('grating_name', dtype=str, ro=True)
 
         self.settings.New(
