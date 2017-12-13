@@ -78,7 +78,7 @@ class ActonSpectrometer(object):
         
         for grating in gratings:
             if self.debug: logger.debug("grating: {}".format( grating ))
-            grating_num, name = grating.strip("\x1a").split(maxsplit=1)
+            grating_num, name = grating.strip("\x1a").strip('\xaf').split(maxsplit=1)
             #if self.debug: logger.debug("grating stripped: {}".format( grating ))
             num = int(grating_num)
             self.gratings.append( (num, name) )
@@ -121,10 +121,11 @@ class ActonSpectrometer(object):
         
     def read_entrance_slit(self):
         resp = self.write_command("SIDE-ENT-SLIT ?MICRONS")
+        resp = resp.strip()
         if self.debug:
             print(resp)
         #"480 um" or "no motor"
-        if resp == ' no motor' or resp == 'no motor':
+        if resp in [ 'no motor' , 'no slit']:
             self.entrance_slit = -1
         else:
             self.entrance_slit = int(resp.split()[0])
@@ -143,8 +144,9 @@ class ActonSpectrometer(object):
         
     def read_exit_slit(self):
         resp = self.write_command("SIDE-EXIT-SLIT ?MICRONS")
+        resp = resp.strip()
         #"960 um" or "no motor"
-        if resp == ' no motor' or resp == 'no motor':
+        if resp in [ 'no motor' , 'no slit']:
             self.exit_slit = -1
         else:
             self.exit_slit = int(resp.split()[0])
@@ -187,7 +189,7 @@ class ActonSpectrometer(object):
         
         out += self.ser.read(2) #Should be "\r\n"
         
-        out = out.decode('ascii')
+        out = out.decode('latin-1')
 
         if self.debug:
             logger.debug( "complete message" +  repr(out))
