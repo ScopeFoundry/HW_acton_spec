@@ -56,7 +56,7 @@ class ActonSpectrometerHW(HardwareComponent):
         # f (nm), delta (angle), gamma(angle), n0, d_grating(nm), x_pixel(nm),
         # distances stored in nm
         self.settings.New('grating_calibrations', dtype=float, 
-                          array=True, initial=[[300e6,0,0,256, (1/150.)*1e6, 16e3]]*3)
+                          array=True, initial=[[300e6,0,0,256,0,  (1/150.)*1e6, 16e3]]*3)
 
     def connect(self):
         if self.debug: self.log.info( "connecting to acton_spectrometer" )
