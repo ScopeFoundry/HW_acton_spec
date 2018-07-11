@@ -129,20 +129,20 @@ class ActonSpectrometerHW(HardwareComponent):
         binned_px = binning*px_index + 0.5*(binning-1)
         wl = wl_p_calib(binned_px, n0, offset_adjust, S['center_wl'], m_order, d_grating, x_pixel, f, delta, gamma, curvature)
         
-        print('get_wl_calibration', 'grating#', grating_id, 'grating calib:', S['grating_calibrations'][grating_id], 'center wl:', S['center_wl'], 'output:', wl)
+        #print('get_wl_calibration', 'grating#', grating_id, 'grating calib:', S['grating_calibrations'][grating_id], 'center wl:', S['center_wl'], 'output:', wl)
         
         return wl
         
 def wl_p_calib(px, n0, offset_adjust, wl_center, m_order, d_grating, x_pixel, f, delta, gamma, curvature=0):
-    print('wl_p_calib:', px, n0, offset_adjust, wl_center, m_order, d_grating, x_pixel, f, delta, gamma, curvature)
+    #print('wl_p_calib:', px, n0, offset_adjust, wl_center, m_order, d_grating, x_pixel, f, delta, gamma, curvature)
     #consts
     #d_grating = 1./150. #mm
     #x_pixel   = 16e-3 # mm
     #m_order   = 1 # diffraction order, unitless
     n = px - (n0+offset_adjust*wl_center)
 
-    print('psi top', m_order* wl_center)
-    print('psi bottom', (2*d_grating*np.cos(gamma/2)) )
+    #print('psi top', m_order* wl_center)
+    #print('psi bottom', (2*d_grating*np.cos(gamma/2)) )
 
     psi = np.arcsin( m_order* wl_center / (2*d_grating*np.cos(gamma/2)))
     eta = np.arctan(n*x_pixel*np.cos(delta) / (f+n*x_pixel*np.sin(delta)))
