@@ -1,9 +1,9 @@
-ScopeFoundryHW.mcl_stage
+ScopeFoundryHW.acton_spec
 =====================
 
 Princeton Instruments / Acton 2300i Spectrometer plug-in for ScopeFoundry.
 
-This interface uses the RS-232 or USB serial interface to Acton spectrometers
+This interface uses the RS-232 or USB-serial interface to Acton spectrometers
 
 It has been tested with Acton 2300i and 300 series spectrometers
 
